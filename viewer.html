@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"/>
+  <title>Respon Orang Tua - LABIRIN 37</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a1f18;
+      font-family: 'Segoe UI', -apple-system, sans-serif;
+      overflow: hidden;
+      color: #fff;
+    }
+    .viewer {
+      position: relative;
+      width: 100%; height: 100vh; height: 100dvh;
+      display: flex; flex-direction: column;
+    }
+    .stage {
+      flex: 1;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 70px 70px;
+    }
+    .stage img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      opacity: 0;
+      transform: scale(.97);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .stage img.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Tombol panah */
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px; height: 52px;
+      border: none;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s ease, transform .2s ease;
+      z-index: 10;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,.22); transform: translateY(-50%) scale(1.08); }
+    .nav-btn:active { transform: translateY(-50%) scale(.95); }
+    .nav-btn:focus-visible { outline: 3px solid #fbbf24; outline-offset: 3px; }
+    .nav-btn svg { width: 26px; height: 26px; }
+    .nav-btn.prev { left: 14px; }
+    .nav-btn.next { right: 14px; }
+    .nav-btn.hidden { display: none; }
+
+    /* Tombol close */
+    .close-btn {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 40px; height: 40px;
+      border: none;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s ease;
+      z-index: 10;
+    }
+    .close-btn:hover { background: rgba(255,255,255,.22); }
+    .close-btn:focus-visible { outline: 3px solid #fbbf24; outline-offset: 3px; }
+
+    /* Counter bawah */
+    .counter {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: .5px;
+      color: #e5f2eb;
+      z-index: 10;
+    }
+
+    @media (max-width: 600px) {
+      .stage { padding: 50px 12px 60px; }
+      .nav-btn { width: 42px; height: 42px; }
+      .nav-btn svg { width: 22px; height: 22px; }
+      .nav-btn.prev { left: 6px; }
+      .nav-btn.next { right: 6px; }
+      .counter { font-size: 11px; padding: 6px 14px; bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewer">
+    <button class="close-btn" id="closeBtn" aria-label="Tutup">×</button>
+
+    <div class="stage">
+      <button class="nav-btn prev" id="prevBtn" aria-label="Gambar sebelumnya">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+
+      <img id="stageImg" alt="Respon Orang Tua" />
+
+      <button class="nav-btn next" id="nextBtn" aria-label="Gambar berikutnya">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="counter" id="counter">Gambar 1 dari 2</div>
+  </div>
+
+  <script>
+    // ====== DAFTAR GAMBAR (sesuaikan dengan link di kode.gs) ======
+    var IMAGES = [
+      "https://labirin37.pages.dev/assets/respon-ortu-1.png",
+      "https://labirin37.pages.dev/assets/respon-ortu-2.png"
+    ];
+
+    var imgEl = document.getElementById('stageImg');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var counter = document.getElementById('counter');
+    var closeBtn = document.getElementById('closeBtn');
+
+    function getInitialIndex() {
+      var params = new URLSearchParams(window.location.search);
+      var n = parseInt(params.get('img') || '1', 10);
+      if (isNaN(n) || n < 1 || n > IMAGES.length) n = 1;
+      return n - 1;
+    }
+
+    var current = getInitialIndex();
+
+    function render() {
+      imgEl.classList.remove('visible');
+      setTimeout(function() {
+        imgEl.src = IMAGES[current];
+        imgEl.onload = function() { imgEl.classList.add('visible'); };
+      }, 120);
+
+      prevBtn.classList.toggle('hidden', current === 0);
+      nextBtn.classList.toggle('hidden', current === IMAGES.length - 1);
+      counter.textContent = 'Gambar ' + (current + 1) + ' dari ' + IMAGES.length;
+
+      // Update URL tanpa reload (agar tombol back browser tetap berfungsi)
+      var newUrl = window.location.pathname + '?img=' + (current + 1);
+      history.replaceState({}, '', newUrl);
+    }
+
+    function goNext() {
+      if (current < IMAGES.length - 1) { current++; render(); }
+    }
+    function goPrev() {
+      if (current > 0) { current--; render(); }
+    }
+
+    prevBtn.addEventListener('click', goPrev);
+    nextBtn.addEventListener('click', goNext);
+
+    // Keyboard: panah kiri/kanan, ESC untuk tutup
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key === 'Escape') closeBtn.click();
+    });
+
+    // Tutup = kembali ke halaman utama
+    closeBtn.addEventListener('click', function() {
+      // Jika di-iframe, kirim pesan ke wrapper; jika tidak, history.back
+      if (window.self !== window.top) {
+        try { window.parent.postMessage({ action: 'navigate', path: '/' }, '*'); } catch(e) {}
+      } else {
+        if (document.referrer) window.history.back();
+        else window.location.href = 'https://labirin37.pages.dev/';
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
