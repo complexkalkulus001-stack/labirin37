@@ -34,10 +34,7 @@
       transform: scale(.97);
       transition: opacity .35s ease, transform .35s ease;
     }
-    .stage img.visible {
-      opacity: 1;
-      transform: scale(1);
-    }
+    .stage img.visible { opacity: 1; transform: scale(1); }
 
     /* Tombol panah */
     .nav-btn {
@@ -132,7 +129,7 @@
   </div>
 
   <script>
-    // ====== DAFTAR GAMBAR (sesuaikan dengan link di kode.gs) ======
+    // ====== DAFTAR GAMBAR (link asli, sudah diverifikasi) ======
     var IMAGES = [
       "https://cdn.phototourl.com/anon/2026-11-16-486f3935-138a-4f99-b9aa-9e11e4587b9a.png",
       "https://cdn.phototourl.com/anon/2026-11-16-783ac7a0-26e1-41f2-b7d9-bcc892772815.png"
@@ -173,17 +170,13 @@
       nextBtn.classList.toggle('hidden', current === IMAGES.length - 1);
       counter.textContent = 'Gambar ' + (current + 1) + ' dari ' + IMAGES.length;
 
-      // Update URL tanpa reload (agar tombol back browser tetap berfungsi)
-      var newUrl = window.location.pathname + '?img=' + (current + 1);
+      // Update URL tanpa reload (pertahankan ?back= agar tetap tahu halaman asal)
+      var newUrl = window.location.pathname + '?img=' + (current + 1) + '&back=' + encodeURIComponent(backPath);
       history.replaceState({}, '', newUrl);
     }
 
-    function goNext() {
-      if (current < IMAGES.length - 1) { current++; render(); }
-    }
-    function goPrev() {
-      if (current > 0) { current--; render(); }
-    }
+    function goNext() { if (current < IMAGES.length - 1) { current++; render(); } }
+    function goPrev() { if (current > 0) { current--; render(); } }
 
     prevBtn.addEventListener('click', goPrev);
     nextBtn.addEventListener('click', goNext);
@@ -195,16 +188,16 @@
       else if (e.key === 'Escape') closeBtn.click();
     });
 
-    // Tutup = kembali ke halaman utama
+    // Tutup = kembali ke halaman asal (default #/video), BUKAN home.
+    // Viewer selalu top-level (dibuka via tab baru), jadi navigasi langsung.
     closeBtn.addEventListener('click', function() {
-      // Jika di-iframe, kirim pesan ke wrapper; jika tidak, history.back
-      if (window.self !== window.top) {
-        try { window.parent.postMessage({ action: 'navigate', path: '/' }, '*'); } catch(e) {}
-      } else {
-        if (document.referrer) window.history.back();
-        else window.location.href = 'https://labirin37.pages.dev/';
-      }
+      var h = backPath.replace(/^\/+/, '');            // 'video' | 'portofolio' | 'artefak' | ''
+      var target = window.location.origin + '/' + (h ? '#/' + h : '');
+      window.location.href = target;
     });
+
+    // Preload semua gambar agar panah terasa instan
+    IMAGES.forEach(function(u) { var p = new Image(); p.src = u; });
 
     render();
   </script>
