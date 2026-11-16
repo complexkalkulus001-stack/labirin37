@@ -153,6 +153,15 @@
 
     var current = getInitialIndex();
 
+    // Halaman asal untuk tombol tutup. Default '/video' (viewer dibuat untuk kartu Video).
+    var backPath = (function() {
+      var b = new URLSearchParams(window.location.search).get('back');
+      if (!b) return '/video';
+      b = b.replace(/^#/, '');
+      if (b.charAt(0) !== '/') b = '/' + b;
+      return b;
+    })();
+
     function render() {
       imgEl.classList.remove('visible');
       setTimeout(function() {
